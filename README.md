@@ -2,9 +2,14 @@
 
 > Auf Deutsch lesen: [README.de.md](README.de.md)
 
-Documentation of converting an old Junkers gas boiler to a smart control.
-Instead of the original **Junkers TRQ 21** room thermostat, the boiler is
-driven by a Shelly Plus Uni via the **1-2-4 interface**.
+Documentation of how I made my old **Junkers/Bosch gas boiler** smart by
+replacing the **Junkers TRQ 21** modulating room thermostat with a
+**Shelly Plus Uni** on the **1-2-4 interface**. Four heating
+levels (Off / Low / Medium / High), room temperature via **DS18B20**,
+ready to integrate with **Home Assistant**, MQTT or the Shelly Cloud.
+
+Compatible with older Junkers/Bosch boilers that use the 1-2-4 interface
+– e.g. **ZWR**, **ZSBE**, **ZWN**, **ZWA** series.
 
 > **Disclaimer:** This is my personal documentation, not a build-along
 > tutorial. If you mess with your boiler, you should know what you're

@@ -2,9 +2,15 @@
 
 > Read this in English: [README.md](README.md)
 
-Dokumentation der Umrüstung einer alten Junkers-Gastherme auf eine smarte
-Steuerung. Anstelle des originalen Raumthermostats **Junkers TRQ 21** wird die 
-Therme mit einem Shelly Plus Uni über die **1-2-4-Schnittstelle** angesteuert.
+Dokumentation, wie ich meine alte **Junkers-/Bosch-Gastherme** smart
+gemacht habe: Das modulierende Raumthermostat **Junkers TRQ 21** wurde
+durch einen **Shelly Plus Uni** an der **1-2-4-Schnittstelle** ersetzt.
+Vier Heizstufen (Aus / Niedrig / Mittel / Hoch),
+Raumtemperatur­messung per **DS18B20**, anbindbar an **Home Assistant**,
+MQTT oder die Shelly-Cloud.
+
+Passend für ältere Junkers-/Bosch-Thermen mit 1-2-4-Schnittstelle –
+z. B. die Baureihen **ZWR**, **ZSBE**, **ZWN**, **ZWA**.
 
 > **Disclaimer:** Das hier ist meine persönliche Doku, kein Nachbau-Tutorial.
 > Wer an seiner Heizung schraubt, sollte wissen, was er tut – Nachbau auf
