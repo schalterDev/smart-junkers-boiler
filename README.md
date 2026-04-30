@@ -211,6 +211,19 @@ switches its resistor between terminal **2** and terminal **4** (pulldown):
 | **OUT 2**     | **4 kΩ** (2 kΩ + 2 kΩ in series)                  | Low             |
 | OUT 1 + OUT 2 | 5.1 kΩ ∥ 4 kΩ ≈ 2.22 kΩ                           | Off             |
 
+## 3D-printed cover
+
+To replace the TRQ 21 visually, I modeled a **3D-printable cover** that
+clips onto the **existing wall bracket** of the original thermostat – no
+new holes. The Shelly Plus Uni and all wiring fit underneath.
+
+![Preview of the 3D-printed cover](3d-printing/cover.png)
+
+The print files live in [`3d-printing/`](3d-printing/):
+
+- [`cover.stl`](3d-printing/cover.stl) – ready-to-slice model
+- [`cover.png`](3d-printing/cover.png) – preview render
+
 ## Sources and further reading
 
 - [Driving the Junkers 1-2-4 interface – mikrocontroller.net](https://www.mikrocontroller.net/topic/450569) (German)

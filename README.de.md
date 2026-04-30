@@ -211,6 +211,18 @@ schalten ihren Widerstand jeweils zwischen Klemme **2** und Klemme **4** (Pulldo
 | **OUT 2**     | **4 kΩ** (2 kΩ + 2 kΩ in Reihe)                    | Niedrig         |
 | OUT 1 + OUT 2 | 5,1 kΩ ∥ 4 kΩ ≈ 2,22 kΩ                            | Aus             |
 
+## 3D-gedruckte Abdeckung
+
+Als optischer Ersatz für den TRQ 21 habe ich eine **3D-druckbare Abdeckung**
+modelliert, die auf die **bereits vorhandene Wandhalterung** des
+Original­thermostats gesteckt wird – keine neuen Bohrlöcher. 
+Der Shelly Plus Uni und die komplette Verkabelung finden darunter Platz.
+
+![Vorschau der 3D-gedruckten Abdeckung](3d-printing/cover.png)
+
+- [`cover.stl`](3d-printing/cover.stl) – druckfertiges Modell
+- [`cover.png`](3d-printing/cover.png) – Vorschau-Rendering
+
 ## Quellen und weiterführende Informationen
 
 - [Ansteuerung Junkers 1-2-4-Schnittstelle – mikrocontroller.net](https://www.mikrocontroller.net/topic/450569)
