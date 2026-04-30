@@ -1,4 +1,4 @@
-# Smart Junkers Boiler
+# Smart Junkers Gas Boiler
 
 > Auf Deutsch lesen: [README.de.md](README.de.md)
 
@@ -15,28 +15,35 @@ Compatible with older Junkers/Bosch boilers that use the 1-2-4 interface
 > tutorial. If you mess with your boiler, you should know what you're
 > doing – recreate at your own risk.
 
-## Goal: 4 heating levels via two Shelly outputs
+## Goal: 4 heating levels with frost-protection failsafe
 
 Instead of the modulating control of the TRQ 21, the Shelly Plus Uni is
-used to implement **four discrete heating levels** – **Off**, **Low**,
-**Medium** and **High**. The two switchable outputs of the Shelly are
-used in all four combinations:
+used to implement **four discrete heating levels** – **High**, **Medium**,
+**Low** and **Off**. The circuit is deliberately wired so that if the
+Shelly fails (unpowered, broken) the boiler **keeps heating at full
+power** instead of going off: frost damage to heating and water pipes is
+much more expensive than temporary overheating, which is limited by the
+radiator thermostatic valves anyway.
 
-| Level      | Output 1 | Output 2 | active pull-up between 1 ↔ 2 |
-| ---------- | :------: | :------: | ---------------------------- |
-| **Off**    |   off    |   off    | none                         |
-| **Low**    |    on    |   off    | 2 kΩ                         |
-| **Medium** |   off    |    on    | 1 kΩ                         |
-| **High**   |    on    |    on    | 2 kΩ ∥ 1 kΩ ≈ 667 Ω          |
+The two switchable outputs of the Shelly are used in all four
+combinations – active pulldowns between terminal **2** (signal) and
+terminal **4** (GND) pull the voltage down step by step from the
+failsafe full-load level:
+
+| Level      | Output 1 | Output 2 | active pulldown between 2 ↔ 4 |
+| ---------- | :------: | :------: | ----------------------------- |
+| **High**   |   off    |   off    | none (terminal 2 floating)    |
+| **Medium** |    on    |   off    | 5.1 kΩ                        |
+| **Low**    |   off    |    on    | 4 kΩ (2 kΩ + 2 kΩ in series)  |
+| **Off**    |    on    |    on    | 5.1 kΩ ∥ 4 kΩ ≈ 2.22 kΩ       |
 
 Each level corresponds to a fixed voltage at terminal 2 and therefore a
 fixed burner power – the matching voltage levels are documented further
-down under [My measurements](#my-measurements).
+down under [Voltages and measurements](#voltages-and-measurements).
 
 ## The replaced room thermostat: Junkers TRQ 21
 
-The TRQ 21 (variant *T* with a daily program, *W* with a weekly program)
-is a **modulating room temperature controller** for older Junkers/Bosch
+The TRQ 21 is a **modulating room temperature controller** for older Junkers/Bosch
 gas boilers. It measures the room temperature, compares it to the
 setpoint and tells the boiler via an analog control signal **how much**
 to heat.
@@ -60,43 +67,82 @@ The boiler applies its 24 V supply voltage between terminal 1 and
 terminal 4 and measures **what voltage the controller returns on
 terminal 2**. This voltage directly controls burner modulation:
 
-- **below ~5 V**: burner **off**
+- **below ~7 V**: burner **off**
 - **up to ~15 V**: burner power increases up to **100 %** (higher voltage  
   produces no additional power)
 
 > **Failsafe behavior:** If no controller is connected – terminal 2 left
 > open – the boiler interprets this as a full-load request and heats at
-> 100 %.
+> 100 %. This circuit deliberately leverages that behavior as frost
+> protection: if the Shelly fails, the boiler automatically falls back
+> to full power.
 
 ## Control via Shelly Plus Uni
 
 Instead of a TRQ 21, a **Shelly Plus Uni** now sits at the 1-2-4
 interface. The circuit uses no active electronics – the Shelly does not
 drive terminal 2 "analog", it only modifies the voltage divider formed
-by the boiler's internal pull-up and external resistors:
+by the boiler's internal pull-up and external pulldown resistors:
 
-- **Failsafe pulldown (permanent):** 1 kΩ between terminal **2** and
-  terminal **4**. With nothing else attached, this leaves only about
-  **3.5 V** on terminal 2 – so the boiler stays off when the Shelly is
-  unpowered or has no output switched on.
-- **Pull-up via the Shelly:** the two switchable outputs of the Shelly
-  Plus Uni each connect a resistor between terminal **1** (+24 V) and
-  terminal **2**. The smaller the resistor, the higher the voltage on
-  terminal 2 – and the higher the burner power.
+- **No permanent pulldown:** terminal 2 is left floating in the idle
+  state. The boiler's internal pull-up pulls it to +21 V – so the
+  boiler heats at full power on any fault (frost-protection failsafe).
+- **Pulldowns via the Shelly:** the two switchable outputs each connect
+  a resistor between terminal **2** (signal) and terminal **4** (GND).
+  When the outputs are not switched on – or the Shelly is unpowered –
+  the pulldowns are automatically disconnected. The smaller the
+  effective pulldown, the harder terminal 2 is pulled toward GND – and
+  the lower the burner power.
 
-### My measurements
+### Voltages and measurements
 
-Voltage between terminal **2** and terminal **4**, with the 1 kΩ pulldown
-between 2 and 4 permanently in place:
+Voltage at terminal **2** for the four heating levels, measured on my
+boiler:
 
-| Pull-up between 1 ↔ 2 | Voltage at terminal 2 |
-| --------------------- | --------------------- |
-| none                  | **~3.5 V**            |
-| 5 kΩ                  | **6.4 V**             |
-| 2 kΩ                  | **9.5 V**             |
-| 1 kΩ                  | **13 V**              |
-| 667 Ω (2 kΩ ∥ 1 kΩ)   | **14.9 V**            |
-| 330 Ω                 | **18.2 V**            |
+| Pulldown 2 ↔ 4           | Voltage at terminal 2 | Level             | Burner behaviour       |
+| ------------------------ | --------------------- | ----------------- | ---------------------- |
+| none (floating)          | **21.4 V**            | High (failsafe)   | full power             |
+| 5.1 kΩ                   | **10.5 V**            | Medium            | on, modulated          |
+| 4 kΩ (2 kΩ + 2 kΩ)       | **9.3 V**             | Low               | on, ignites cold       |
+| 2.22 kΩ (5.1 kΩ ∥ 4 kΩ)  | **6.4 V**             | Off               | shuts off              |
+
+The values were measured on my boiler – they may vary slightly
+between models.
+
+#### Hysteresis: two different thresholds
+
+Modulating burners typically have a hysteresis – the voltage at which
+a **cold** burner ignites is higher than the voltage at which a
+**running** burner shuts off. For my boiler the measurements yield:
+
+- **Cut-off threshold:** ~6 V → running burner shuts off
+- **Hysteresis zone:** ~6 – 9 V → burner stays on if already running,
+  but does **not** restart from the off state
+- **Re-ignition threshold:** ~9 V → cold burner ignites reliably
+
+**This drives the choice of R_b:** R_b is deliberately picked large
+enough (4 kΩ) so that the Low voltage (9.3 V) sits **above the
+re-ignition threshold** – the burner therefore ignites reliably from
+the off state even when Low is selected. A smaller R_b such as 3 kΩ
+would push Low down to 7.8 V, right into the hysteresis zone: the
+burner would stay on if already running but would not restart by
+itself from the off state.
+
+#### Characterisation series
+
+Full measurement series:
+
+| Pulldown 2 ↔ 4    | Voltage at terminal 2 | Burner behaviour                |
+| ----------------- | --------------------- | ------------------------------- |
+| none (open)       | 21.4 V                | on, full power                  |
+| 10 kΩ             | 14 V                  | on (modulation saturation zone) |
+| 5.1 kΩ            | 10.5 V                | on, modulated                   |
+| 4 kΩ              | 9.3 V                 | ignites cold reliably           |
+| 3 kΩ              | 7.8 V                 | stays on, won't ignite cold     |
+| 2.22 kΩ (5.1 ∥ 4) | 6.4 V                 | shuts off (from running)        |
+| 2 kΩ              | 5.9 V                 | shuts off (from running)        |
+| 1.88 kΩ (5.1 ∥ 3) | 5.7 V                 | shuts off (from running)        |
+| 1 kΩ              | 3.5 V                 | shuts off (from running)        |
 
 ### Voltage monitoring
 
@@ -129,14 +175,13 @@ The complete wiring is shown in [`images/wiring.png`](images/wiring.png)
 At the top of the image are the four boiler terminals. Only **1**, **2**
 and **4** are used; **terminal 3** is left open.
 
-- **Terminal 1 (24 V)** powers both the Shelly (via VAC1) and – through
-  the OUT 1 / OUT 2 relays – the pull-up resistors going to terminal 2.
-- **Terminal 2 (signal)** is tied to terminal 4 via a fixed
-  **1 kΩ pulldown** and is pulled up towards +24 V via the Shelly outputs
-  on demand. The same line also feeds the Shelly's **ANALOG IN** pin for
-  voltage measurement.
+- **Terminal 1 (24 V)** powers the Shelly via VAC1.
+- **Terminal 2 (signal)** is pulled towards terminal 4 (GND) on demand
+  through the pulldown resistors switched by the two Shelly outputs.
+  The same line also feeds the Shelly's **ANALOG IN** pin for voltage
+  measurement.
 - **Terminal 4 (GND)** is the common ground for the boiler, the Shelly's
-  power supply and the DS18B20.
+  power supply, the DS18B20 and the switched pulldowns.
 
 ### Shelly Plus Uni pinout
 
@@ -156,13 +201,15 @@ of the ten wires are used in this circuit:
 |   9   | IN 1        | -          | unused                                                    |
 |  10   | IN 2        | -          | unused                                                    |
 
-In addition, the Shelly has **two potential-free relay outputs**:
+In addition, the Shelly has **two potential-free relay outputs**. Each
+switches its resistor between terminal **2** and terminal **4** (pulldown):
 
-| Output        | switched pull-up between terminal 1 ↔ terminal 2 | Heating level |
-| ------------- | ------------------------------------------------ | ------------- |
-| **OUT 1**     | **2 kΩ**                                         | Low           |
-| **OUT 2**     | **1 kΩ**                                         | Medium        |
-| OUT 1 + OUT 2 | 2 kΩ ∥ 1 kΩ ≈ 667 Ω                              | High          |
+| Output        | switched pulldown between terminal 2 ↔ terminal 4 | Heating level   |
+| ------------- | ------------------------------------------------- | --------------- |
+| both off      | open (no pulldown)                                | High (failsafe) |
+| **OUT 1**     | **5.1 kΩ**                                        | Medium          |
+| **OUT 2**     | **4 kΩ** (2 kΩ + 2 kΩ in series)                  | Low             |
+| OUT 1 + OUT 2 | 5.1 kΩ ∥ 4 kΩ ≈ 2.22 kΩ                           | Off             |
 
 ## Sources and further reading
 

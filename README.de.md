@@ -1,4 +1,4 @@
-# Smart Junkers Gastherme
+# Smarte Junkers Gastherme
 
 > Read this in English: [README.md](README.md)
 
@@ -16,28 +16,35 @@ z. B. die Baureihen **ZWR**, **ZSBE**, **ZWN**, **ZWA**.
 > Wer an seiner Heizung schraubt, sollte wissen, was er tut – Nachbau auf
 > eigene Gefahr.
 
-## Ziel: 4 Heizstufen über zwei Shelly-Ausgänge
+## Ziel: 4 Heizstufen mit Frostschutz-Failsafe
 
 Statt der modulierenden Regelung des TRQ 21 sollen mit dem Shelly Plus Uni
-**vier diskrete Heizstufen** abgebildet werden – **Aus**, **Niedrig**,
-**Mittel** und **Hoch**. Die zwei schaltbaren Ausgänge des Shelly werden in
-allen vier Kombinationen genutzt:
+**vier diskrete Heizstufen** abgebildet werden – **Hoch**, **Mittel**,
+**Niedrig** und **Aus**. Die Schaltung ist dabei bewusst so ausgelegt,
+dass die Therme bei einem Ausfall des Shelly (stromlos, defekt) **mit
+voller Leistung weiterheizt** statt aus zu gehen: Frostschäden an
+Heizungs- und Wasserleitungen sind deutlich teurer als zeitweises
+Überheizen, das durch Heizkörper-Thermostatventile ohnehin begrenzt wird.
 
-| Stufe       | Ausgang 1 | Ausgang 2 | aktiver Pull-up zwischen 1 ↔ 2 |
-| ----------- | :-------: | :-------: | ------------------------------ |
-| **Aus**     |    aus    |    aus    | keiner                         |
-| **Niedrig** |    ein    |    aus    | 2 kΩ                           |
-| **Mittel**  |    aus    |    ein    | 1 kΩ                           |
-| **Hoch**    |    ein    |    ein    | 2 kΩ ∥ 1 kΩ ≈ 667 Ω            |
+Die zwei schaltbaren Ausgänge des Shelly werden in allen vier
+Kombinationen genutzt – aktive Pulldowns zwischen Klemme **2** (Signal)
+und Klemme **4** (GND) ziehen die Spannung von der Failsafe-Volllast
+schrittweise nach unten:
+
+| Stufe       | Ausgang 1 | Ausgang 2 | aktiver Pulldown zwischen 2 ↔ 4 |
+| ----------- | :-------: | :-------: | ------------------------------- |
+| **Hoch**    |    aus    |    aus    | keiner (Klemme 2 offen)         |
+| **Mittel**  |    ein    |    aus    | 5,1 kΩ                          |
+| **Niedrig** |    aus    |    ein    | 4 kΩ (2 kΩ + 2 kΩ in Reihe)     |
+| **Aus**     |    ein    |    ein    | 5,1 kΩ ∥ 4 kΩ ≈ 2,22 kΩ         |
 
 Jede Stufe entspricht damit einem festen Spannungswert an Klemme 2 und
 einer entsprechend festen Brennerleistung – die zugehörigen Spannungspegel
-sind weiter unten unter [Eigene Messwerte](#eigene-messwerte) dokumentiert.
+sind weiter unten unter [Messwerte und Stufenspannungen](#messwerte-und-stufenspannungen) dokumentiert.
 
 ## Das ersetzte Raumthermostat: Junkers TRQ 21
 
-Der TRQ 21 (Varianten *T* mit Tagesprogramm bzw. *W* mit Wochenprogramm) ist
-ein **modulierender Raumtemperaturregler** für ältere Junkers-/Bosch-Gas­thermen.
+Der TRQ 21 ist ein **modulierender Raumtemperaturregler** für ältere Junkers-/Bosch-Gas­thermen.
 Er misst die Raumtemperatur, vergleicht sie mit dem Sollwert und gibt der
 Therme über eine analoge Stellgröße vor, **wie viel** sie heizen soll.
 
@@ -60,13 +67,15 @@ Die Therme legt zwischen Klemme 1 und Klemme 4 ihre 24 V Versorgungsspannung
 an und misst, **welche Spannung der Regler an Klemme 2 zurückgibt**. Diese
 Spannung steuert direkt die Brennermodulation:
 
-- **unter ~5 V**: Brenner **aus**
+- **unter ~7 V**: Brenner **aus**
 - **bis ~15 V**: Brennerleistung steigt bis **100 %** (höhere Spannung bringt keine  
   zusätzliche Leistung)
 
-> **Sicherheits- bzw. Failsafe-Verhalten:** Ist gar kein Regler angeschlossen
+> **Failsafe-Verhalten:** Ist gar kein Regler angeschlossen
 > – Klemme 2 also offen –, interpretiert die Therme das als Volllast­anforderung
-> und heizt mit 100 %. 
+> und heizt mit 100 %. Genau dieses Verhalten nutzt die Schaltung gezielt
+> als Frostschutz: fällt der Shelly aus, schaltet die Therme automatisch
+> auf Volllast.
 
 ## Ansteuerung mit Shelly Plus Uni
 
@@ -74,30 +83,67 @@ Statt eines TRQ 21 sitzt jetzt ein **Shelly Plus Uni** an der
 1-2-4-Schnittstelle. Die Schaltung kommt ganz ohne aktive Elektronik aus –
 der Shelly steuert nichts „analog" an Klemme 2, sondern verändert nur den
 Spannungsteiler aus dem internen Pull-up der Therme und externen
-Widerständen:
+Pulldown-Widerständen:
 
-- **Sicherheits-Pulldown (dauerhaft):** 1 kΩ zwischen Klemme **2** und
-  Klemme **4**. Damit liegen ohne weiteren Eingriff nur ca. **3,5 V** an
-  Klemme 2 – die Therme bleibt also aus, wenn der Shelly stromlos ist oder
-  keinen Ausgang schaltet.
-- **Pull-up über den Shelly:** Die beiden schaltbaren Ausgänge des Shelly
-  Plus Uni legen jeweils einen Widerstand zwischen Klemme **1** (+24 V) und
-  Klemme **2**. Je kleiner dieser Widerstand, desto höher die Spannung an
-  Klemme 2 – und damit die Brennerleistung.
+- **Kein dauerhafter Pulldown:** Klemme 2 ist im Ruhezustand offen. Der
+  interne Pull-up der Therme zieht sie damit auf +21 V – dadurch heizt
+  die Therme im Fehlerfall mit voller Leistung (Frostschutz-Failsafe).
+- **Pulldowns über den Shelly:** Die beiden schaltbaren Ausgänge legen
+  jeweils einen Widerstand zwischen Klemme **2** (Signal) und Klemme **4**
+  (GND). Sind die Ausgänge nicht geschaltet – oder der Shelly stromlos –,
+  sind die Pulldowns automatisch abgekoppelt. Je kleiner der wirksame
+  Pulldown-Widerstand, desto stärker wird die Spannung an Klemme 2 nach
+  GND gezogen – und desto niedriger die Brennerleistung.
 
-### Eigene Messwerte
+### Messwerte und Stufenspannungen
 
-Spannung zwischen Klemme **2** und Klemme **4**, bei dauerhaft gestecktem
-1 kΩ-Pulldown zwischen 2 und 4:
+Spannung an Klemme **2** für die vier Heizstufen, gemessen an meiner
+Therme:
 
-| Pull-up zwischen 1 ↔ 2 | Spannung an Klemme 2 |
-| ---------------------- | -------------------- |
-| keiner                 | **~3,5 V**           |
-| 5 kΩ                   | **6,4 V**            |
-| 2 kΩ                   | **9,5 V**            |
-| 1 kΩ                   | **13 V**             |
-| 667 Ω (2 kΩ ∥ 1 kΩ)    | **14,9 V**           |
-| 330 Ω                  | **18,2 V**           |
+| Pulldown 2 ↔ 4          | Spannung an Klemme 2 | Stufe           | Brenner-Verhalten    |
+| ----------------------- | -------------------- | --------------- | -------------------- |
+| keiner (offen)          | **21,4 V**           | Hoch (Failsafe) | volle Leistung       |
+| 5,1 kΩ                  | **10,5 V**           | Mittel          | an, moduliert        |
+| 4 kΩ (2 kΩ + 2 kΩ)      | **9,3 V**            | Niedrig         | an, zündet auch kalt |
+| 2,22 kΩ (5,1 kΩ ∥ 4 kΩ) | **6,4 V**            | Aus             | schaltet ab          |
+
+Die Werte sind an meiner Therme gemessen – je nach Modell können sie
+leicht abweichen.
+
+#### Hysterese: zwei verschiedene Schwellen
+
+Modulierende Brenner haben eine Hysterese – die Spannung, ab der ein
+**kalter** Brenner zündet, ist höher als die, bei der ein **laufender**
+Brenner abschaltet. Für meine Therme ergeben die Messungen:
+
+- **Aus-Schwelle:** ~6 V → laufender Brenner geht aus
+- **Hysterese-Zone:** ~6 – 9 V → Brenner bleibt an, falls er gerade
+  läuft, kommt aber **nicht** aus dem Aus-Zustand wieder hoch
+- **Zünd-Schwelle:** ~9 V → kalter Brenner zündet zuverlässig
+
+**Für die Auslegung der Niedrig-Stufe ist das entscheidend:** R_b ist
+gezielt so groß gewählt (4 kΩ), dass die Niedrig-Spannung (9,3 V)
+**oberhalb der Zünd-Schwelle** liegt – der Brenner zündet aus dem
+Aus-Zustand also auch direkt mit Niedrig zuverlässig. Ein kleinerer
+R_b wie z. B. 3 kΩ würde Niedrig auf 7,8 V drücken und damit mitten
+in die Hysterese-Zone: der Brenner liefe dann zwar weiter, falls er
+schon brennt, käme aber aus dem Aus-Zustand nicht mehr von selbst hoch.
+
+#### Charakterisierungs-Messreihe
+
+Vollständige Messreihe an meiner Therme:
+
+| Pulldown 2 ↔ 4    | Spannung an Klemme 2 | Brenner-Verhalten                   |
+| ----------------- | -------------------- | ----------------------------------- |
+| keiner (offen)    | 21,4 V               | an, volle Leistung                  |
+| 10 kΩ             | 14 V                 | an (Modulations-Sättigungs­bereich) |
+| 5,1 kΩ            | 10,5 V               | an, moduliert                       |
+| 4 kΩ              | 9,3 V                | zündet auch kalt zuverlässig        |
+| 3 kΩ              | 7,8 V                | bleibt an, zündet aber nicht kalt   |
+| 2,22 kΩ (5,1 ∥ 4) | 6,4 V                | schaltet ab (aus dem Lauf)          |
+| 2 kΩ              | 5,9 V                | schaltet ab (aus dem Lauf)          |
+| 1,88 kΩ (5,1 ∥ 3) | 5,7 V                | schaltet ab (aus dem Lauf)          |
+| 1 kΩ              | 3,5 V                | schaltet ab (aus dem Lauf)          |
 
 ### Spannungsüberwachung
 
@@ -130,14 +176,12 @@ dargestellt (bearbeitbare Quelle: [`images/wiring.drawio`](images/wiring.drawio)
 Oben im Bild liegen die vier Klemmen der Therme. Genutzt werden nur **1**,
 **2** und **4**; **Klemme 3** bleibt frei.
 
-- **Klemme 1 (24 V)** versorgt sowohl den Shelly (über VAC1) als auch –
-  über die Relais OUT 1 / OUT 2 – die Pull-up-Widerstände nach Klemme 2.
-- **Klemme 2 (Signal)** ist über einen festen **1 kΩ-Pulldown** mit
-  Klemme 4 verbunden und wird über die Shelly-Ausgänge bei Bedarf nach
-  +24 V gezogen. Die gleiche Leitung geht zusätzlich auf den Shelly-Pin
-  **ANALOG IN** zur Spannungsmessung.
-- **Klemme 4 (GND)** ist die gemeinsame Masse für Therme, Shelly-Versorgung
-  und DS18B20.
+- **Klemme 1 (24 V)** versorgt den Shelly über VAC1.
+- **Klemme 2 (Signal)** wird über die beiden Shelly-Ausgänge bei Bedarf
+  über die Pulldown-Widerstände nach Klemme 4 (GND) gezogen. Die gleiche Leitung 
+  geht zusätzlich auf den Shelly-Pin **ANALOG IN** zur Spannungsmessung.
+- **Klemme 4 (GND)** ist die gemeinsame Masse für Therme, Shelly-Versorgung,
+  DS18B20 und die geschalteten Pulldowns.
 
 ### Pinbelegung Shelly Plus Uni
 
@@ -157,13 +201,15 @@ In dieser Schaltung sind sechs der zehn Adern belegt:
 |   9   | IN 1        | -         | unbenutzt                                         |
 |  10   | IN 2        | -         | unbenutzt                                         |
 
-Zusätzlich hat der Shelly **zwei potentialfreie Relaisausgänge**:
+Zusätzlich hat der Shelly **zwei potentialfreie Relaisausgänge**. Beide
+schalten ihren Widerstand jeweils zwischen Klemme **2** und Klemme **4** (Pulldown):
 
-| Ausgang       | geschalteter Pull-up zwischen Klemme 1 ↔ Klemme 2 | Heizstufe |
-| ------------- | ------------------------------------------------- | --------- |
-| **OUT 1**     | **2 kΩ**                                          | Niedrig   |
-| **OUT 2**     | **1 kΩ**                                          | Mittel    |
-| OUT 1 + OUT 2 | 2 kΩ ∥ 1 kΩ ≈ 667 Ω                               | Hoch      |
+| Ausgang       | geschalteter Pulldown zwischen Klemme 2 ↔ Klemme 4 | Heizstufe       |
+| ------------- | -------------------------------------------------- | --------------- |
+| beide aus     | offen (kein Pulldown)                              | Hoch (Failsafe) |
+| **OUT 1**     | **5,1 kΩ**                                         | Mittel          |
+| **OUT 2**     | **4 kΩ** (2 kΩ + 2 kΩ in Reihe)                    | Niedrig         |
+| OUT 1 + OUT 2 | 5,1 kΩ ∥ 4 kΩ ≈ 2,22 kΩ                            | Aus             |
 
 ## Quellen und weiterführende Informationen
 
