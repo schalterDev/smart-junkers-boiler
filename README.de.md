@@ -211,6 +211,14 @@ schalten ihren Widerstand jeweils zwischen Klemme **2** und Klemme **4** (Pulldo
 | **OUT 2**     | **4 kΩ** (2 kΩ + 2 kΩ in Reihe)                    | Niedrig         |
 | OUT 1 + OUT 2 | 5,1 kΩ ∥ 4 kΩ ≈ 2,22 kΩ                            | Aus             |
 
+### Umsetzung
+
+Die komplette Verdrahtung ist mit **Wago-Klemmen** ausgeführt – angelötet
+wurde nur der **DS18B20**. Alle Bauteile finden in der alten Halterung der
+originalen TRQ-21-Wandhalterung Platz:
+
+![Verkabelung mit Wago-Klemmen](images/wiring-implementation.jpg)
+
 ## 3D-gedruckte Abdeckung
 
 Als optischer Ersatz für den TRQ 21 habe ich eine **3D-druckbare Abdeckung**
@@ -218,10 +226,22 @@ modelliert, die auf die **bereits vorhandene Wandhalterung** des
 Original­thermostats gesteckt wird – keine neuen Bohrlöcher. 
 Der Shelly Plus Uni und die komplette Verkabelung finden darunter Platz.
 
+> **Anordnung im Inneren:** Der Shelly gehört nach **oben**, der DS18B20
+> nach **unten** zu den Lüftungs­schlitzen. Der Shelly wird im Betrieb
+> leicht warm – seine Abwärme steigt nach oben und weg vom Sensor, während
+> unten Frischluft durch die Schlitze an den DS18B20 zieht. So verfälscht
+> die Eigenwärme des Shelly die Raumtemperatur­messung nicht.
+
 ![Vorschau der 3D-gedruckten Abdeckung](3d-printing/cover.png)
+
+An der originalen Wandhalterung montiert – Shelly und Verkabelung
+verschwinden komplett darunter:
+
+![3D-gedruckte Abdeckung an der Wand montiert](3d-printing/cover-wall-mounted.jpg)
 
 - [`cover.stl`](3d-printing/cover.stl) – druckfertiges Modell
 - [`cover.png`](3d-printing/cover.png) – Vorschau-Rendering
+- [`cover-wall-mounted.jpg`](3d-printing/cover-wall-mounted.jpg) – an der Wand montiert
 
 ## Quellen und weiterführende Informationen
 

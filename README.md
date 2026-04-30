@@ -211,18 +211,39 @@ switches its resistor between terminal **2** and terminal **4** (pulldown):
 | **OUT 2**     | **4 kΩ** (2 kΩ + 2 kΩ in series)                  | Low             |
 | OUT 1 + OUT 2 | 5.1 kΩ ∥ 4 kΩ ≈ 2.22 kΩ                           | Off             |
 
+### Implementation
+
+The whole circuit is wired with **Wago lever-nut connectors** – only
+the **DS18B20** is soldered. All components fit inside the original
+TRQ 21 wall bracket:
+
+![Wiring implementation with Wago lever-nut connectors](images/wiring-implementation.jpg)
+
 ## 3D-printed cover
 
 To replace the TRQ 21 visually, I modeled a **3D-printable cover** that
 clips onto the **existing wall bracket** of the original thermostat – no
 new holes. The Shelly Plus Uni and all wiring fit underneath.
 
+> **Layout inside the cover:** the Shelly belongs at the **top**, the
+> DS18B20 at the **bottom**, next to the ventilation slits. The Shelly
+> runs slightly warm – its waste heat rises up and away from the sensor,
+> while fresh ambient air is drawn in through the slits at the bottom and
+> across the DS18B20. This way the Shelly's own warmth does not skew the
+> room-temperature reading.
+
 ![Preview of the 3D-printed cover](3d-printing/cover.png)
+
+Mounted on the original wall bracket, with the Shelly and wiring tucked
+underneath:
+
+![3D-printed cover mounted on the wall](3d-printing/cover-wall-mounted.jpg)
 
 The print files live in [`3d-printing/`](3d-printing/):
 
 - [`cover.stl`](3d-printing/cover.stl) – ready-to-slice model
 - [`cover.png`](3d-printing/cover.png) – preview render
+- [`cover-wall-mounted.jpg`](3d-printing/cover-wall-mounted.jpg) – installed on the wall
 
 ## Sources and further reading
 
